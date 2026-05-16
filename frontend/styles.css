@@ -1,0 +1,23 @@
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f6f7f9; color: #1f2328; }
+header { padding: 24px 32px; background: #0d1117; color: #fff; }
+header h1 { margin: 0 0 4px; font-size: 22px; }
+.muted { color: #8b949e; }
+.small { font-size: 12px; }
+.panel { background: #fff; border: 1px solid #d0d7de; border-radius: 8px; margin: 20px 32px; padding: 20px; }
+.panel h2 { margin-top: 0; font-size: 16px; }
+.row { display: flex; gap: 8px; }
+.row input { flex: 1; padding: 8px 10px; border: 1px solid #d0d7de; border-radius: 6px; font-size: 14px; }
+button { padding: 8px 14px; border: 0; border-radius: 6px; background: #1f6feb; color: #fff; cursor: pointer; font-weight: 600; }
+button:hover { background: #1a5fd0; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #eaeef2; }
+.status-COMPLETED { color: #1a7f37; font-weight: 600; }
+.status-FAILED { color: #cf222e; font-weight: 600; }
+.status-CREATED, .status-FETCHING_CONTEXT, .status-PARSING_REPRO, .status-LOCALIZING_CODE, .status-ANALYZING_INTENT, .status-FINDING_REGRESSION, .status-GENERATING_REPORT { color: #9a6700; font-weight: 600; }
+pre { background: #f6f8fa; padding: 14px; border-radius: 6px; white-space: pre-wrap; word-break: break-word; max-height: 60vh; overflow: auto; }
+.meta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; font-size: 13px; }
+.tag { background: #ddf4ff; color: #0969da; padding: 2px 8px; border-radius: 999px; }
+.tag.warn { background: #fff8c5; color: #9a6700; }
+.tag.bad { background: #ffebe9; color: #cf222e; }
+.tag.good { background: #dafbe1; color: #1a7f37; }
