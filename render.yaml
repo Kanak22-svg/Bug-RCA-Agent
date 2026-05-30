@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: bug-rca-agent
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./bug_copilot.db
+      - key: PROVIDER_MODE
+        value: mock
+      - key: DEBUG
+        value: false
+      - key: ANTHROPIC_API_KEY
+        value: ""
