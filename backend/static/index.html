@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug RCA Agent</title>
+    <style>
+        :root {
+            --bg: #0a0a0b;
+            --card: #141416;
+            --border: #27272a;
+            --text: #fafafa;
+            --text-secondary: #a1a1aa;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --red: #ef4444;
+            --green: #22c55e;
+            --yellow: #eab308;
+            --orange: #f97316;
+        }
+
+        [data-theme="light"] {
+            --bg: #f9fafb;
+            --card: #ffffff;
+            --border: #e5e7eb;
+            --text: #111827;
+            --text-secondary: #6b7280;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 span { color: var(--accent); }
+
+        .theme-toggle {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .theme-toggle:hover { border-color: var(--accent); }
+
+        /* Input Section */
+        .input-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .input-section label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .input-row input {
+            flex: 1;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .input-row input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .input-row input::placeholder { color: var(--text-secondary); }
+
+        .btn-analyze {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-analyze:hover { background: var(--accent-hover); }
+        .btn-analyze:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .input-hint {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* Loading */
+        .loading-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .loading-section.active { display: block; }
+
+        .loading-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .step.completed { color: var(--green); }
+        .step.running { color: var(--accent); }
+
+        .step-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .step-time {
+            margin-left: auto;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Results */
+        .results-section {
+            display: none;
+        }
+
+        .results-section.active { display: block; }
+
+        .result-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .result-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        /* Classification Banner */
+        .classification-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .classification-banner.regression {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .classification-banner.intentional {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .classification-banner.unclear {
+            background: rgba(234, 179, 8, 0.1);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .classification-label {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .classification-banner.regression .classification-label { color: var(--red); }
+        .classification-banner.intentional .classification-label { color: var(--green); }
+        .classification-banner.unclear .classification-label { color: var(--yellow); }
+
+        .confidence-ring {
+            text-align: center;
+        }
+
+        .confidence-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .confidence-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Summary */
+        .summary-text {
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text);
+        }
+
+        /* Findings Grid */
+        .findings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .finding-item {
+            background: var(--bg);
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .finding-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .finding-value {
+            font-size: 14px;
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            color: var(--text-secondary);
+        }
+
+        /* Lists */
+        .item-list { list-style: none; }
+
+        .item-list li {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .item-list li:last-child { border-bottom: none; }
+
+        .item-title {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .item-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge.high { background: rgba(239,68,68,0.15); color: var(--red); }
+        .badge.medium { background: rgba(234,179,8,0.15); color: var(--yellow); }
+        .badge.low { background: rgba(107,114,128,0.15); color: var(--text-secondary); }
+        .badge.contradicts { background: rgba(239,68,68,0.15); color: var(--red); }
+        .badge.supports { background: rgba(34,197,94,0.15); color: var(--green); }
+        .badge.related { background: rgba(59,130,246,0.15); color: var(--accent); }
+
+        /* Collapsible */
+        .collapsible-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .collapsible-header .arrow {
+            transition: transform 0.2s;
+            color: var(--text-secondary);
+        }
+
+        .collapsible-header.open .arrow { transform: rotate(90deg); }
+
+        .collapsible-body {
+            display: none;
+            margin-top: 16px;
+        }
+
+        .collapsible-body.open { display: block; }
+
+        /* Recommendation */
+        .rec-type {
+            display: inline-block;
+            background: rgba(59,130,246,0.15);
+            color: var(--accent);
+            padding: 4px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .rec-detail {
+            font-size: 14px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        /* Error */
+        .error-msg {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: var(--red);
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-msg.active { display: block; margin-bottom: 16px; }
+
+        /* Past investigations */
+        .past-section {
+            margin-top: 40px;
+        }
+
+        .past-section h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .past-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .past-table th {
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+        }
+
+        .past-table td {
+            padding: 10px 12px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .past-table tr { cursor: pointer; }
+        .past-table tbody tr:hover { background: var(--card); }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .status-dot.completed { background: var(--green); }
+        .status-dot.failed { background: var(--red); }
+        .status-dot.running { background: var(--yellow); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
+                Bug <span>RCA</span> Agent
+            </h1>
+            <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+        </div>
+
+        <!-- Input -->
+        <div class="input-section">
+            <label>Jira Ticket Key or URL</label>
+            <div class="input-row">
+                <input type="text" id="ticketInput" placeholder="e.g. PROJ-1234 or https://jira.company.com/browse/PROJ-1234" onkeydown="if(event.key==='Enter') analyze()">
+                <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">Analyze</button>
+            </div>
+            <div class="input-hint">Paste a Jira ticket key or full URL. The agent will fetch the bug details, search related code, docs, and commits, then produce a root cause analysis.</div>
+        </div>
+
+        <!-- Error -->
+        <div class="error-msg" id="errorMsg"></div>
+
+        <!-- Loading Steps -->
+        <div class="loading-section" id="loadingSection">
+            <div class="loading-title">Investigating...</div>
+            <div id="pipelineSteps"></div>
+        </div>
+
+        <!-- Results -->
+        <div class="results-section" id="resultsSection">
+            <!-- Classification Banner -->
+            <div class="classification-banner" id="classificationBanner">
+                <div>
+                    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px;">Classification</div>
+                    <div class="classification-label" id="classLabel">LIKELY REGRESSION</div>
+                </div>
+                <div class="confidence-ring">
+                    <div class="confidence-value" id="confValue">87%</div>
+                    <div class="confidence-label">confidence</div>
+                </div>
+            </div>
+
+            <!-- Executive Summary -->
+            <div class="result-card">
+                <h3>Executive Summary</h3>
+                <div class="summary-text" id="summaryText"></div>
+            </div>
+
+            <!-- Key Findings -->
+            <div class="result-card">
+                <h3>Key Findings</h3>
+                <div class="findings-grid" id="findingsGrid"></div>
+            </div>
+
+            <!-- Recommendation -->
+            <div class="result-card">
+                <h3>Recommended Action</h3>
+                <div class="rec-type" id="recType"></div>
+                <div class="rec-detail" id="recDetail"></div>
+            </div>
+
+            <!-- Suggested Fix -->
+            <div class="result-card" id="fixCard" style="display:none">
+                <h3>Suggested Code Fix</h3>
+                <div class="code-block" id="fixCode"></div>
+            </div>
+
+            <!-- Code Candidates (collapsible) -->
+            <div class="result-card">
+                <div class="collapsible-header open" onclick="toggleCollapse(this)">
+                    <h3 style="margin:0">Suspect Code Locations</h3>
+                    <span class="arrow">&#9654;</span>
+                </div>
+                <div class="collapsible-body open">
+                    <ul class="item-list" id="codeList"></ul>
+                </div>
+            </div>
+
+            <!-- Suspicious Commits (collapsible) -->
+            <div class="result-card">
+                <div class="collapsible-header open" onclick="toggleCollapse(this)">
+                    <h3 style="margin:0">Suspicious Commits & PRs</h3>
+                    <span class="arrow">&#9654;</span>
+                </div>
+                <div class="collapsible-body open">
+                    <ul class="item-list" id="commitList"></ul>
+                </div>
+            </div>
+
+            <!-- Related Tickets (collapsible) -->
+            <div class="result-card">
+                <div class="collapsible-header" onclick="toggleCollapse(this)">
+                    <h3 style="margin:0">Related Jira Tickets</h3>
+                    <span class="arrow">&#9654;</span>
+                </div>
+                <div class="collapsible-body">
+                    <ul class="item-list" id="ticketList"></ul>
+                </div>
+            </div>
+
+            <!-- Confluence Docs (collapsible) -->
+            <div class="result-card">
+                <div class="collapsible-header" onclick="toggleCollapse(this)">
+                    <h3 style="margin:0">Confluence Docs Consulted</h3>
+                    <span class="arrow">&#9654;</span>
+                </div>
+                <div class="collapsible-body">
+                    <ul class="item-list" id="docsList"></ul>
+                </div>
+            </div>
+
+            <!-- Pipeline Steps (collapsible) -->
+            <div class="result-card">
+                <div class="collapsible-header" onclick="toggleCollapse(this)">
+                    <h3 style="margin:0">Pipeline Steps</h3>
+                    <span class="arrow">&#9654;</span>
+                </div>
+                <div class="collapsible-body">
+                    <div id="finalSteps"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Past Investigations -->
+        <div class="past-section" id="pastSection" style="display:none">
+            <h2>Past Investigations</h2>
+            <table class="past-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Ticket</th>
+                        <th>Title</th>
+                        <th>Classification</th>
+                        <th>Confidence</th>
+                    </tr>
+                </thead>
+                <tbody id="pastTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API = '';
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+        }
+
+        function toggleCollapse(header) {
+            header.classList.toggle('open');
+            const body = header.nextElementSibling;
+            body.classList.toggle('open');
+        }
+
+        function extractKey(input) {
+            input = input.trim();
+            // Handle full URLs like https://jira.company.com/browse/PROJ-1234
+            const urlMatch = input.match(/\/browse\/([A-Z][\w]+-\d+)/i);
+            if (urlMatch) return urlMatch[1].toUpperCase();
+            // Handle plain key like PROJ-1234
+            const keyMatch = input.match(/^([A-Z][\w]+-\d+)$/i);
+            if (keyMatch) return keyMatch[1].toUpperCase();
+            return input;
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.classList.add('active');
+        }
+
+        function hideError() {
+            document.getElementById('errorMsg').classList.remove('active');
+        }
+
+        function showLoading(steps) {
+            const section = document.getElementById('loadingSection');
+            section.classList.add('active');
+            const container = document.getElementById('pipelineSteps');
+            container.innerHTML = '';
+
+            const stepNames = [
+                'Fetching Jira issue details',
+                'Finding related Jira tickets',
+                'Retrieving Confluence docs',
+                'Searching GitHub code',
+                'Analyzing code locations',
+                'Checking if behavior is intentional',
+                'Finding suspicious commits',
+                'Generating final report'
+            ];
+
+            stepNames.forEach((name, i) => {
+                const div = document.createElement('div');
+                div.className = 'step';
+                div.id = `step-${i+1}`;
+                div.innerHTML = `
+                    <div class="step-icon"><div class="spinner" style="display:none"></div><span>&#9711;</span></div>
+                    <span>${name}</span>
+                    <span class="step-time"></span>
+                `;
+                container.appendChild(div);
+            });
+
+            // Animate steps
+            animateSteps(stepNames.length);
+        }
+
+        async function animateSteps(total) {
+            for (let i = 1; i <= total; i++) {
+                const step = document.getElementById(`step-${i}`);
+                if (!step) break;
+                step.className = 'step running';
+                step.querySelector('.spinner').style.display = 'block';
+                step.querySelector('span').style.display = 'none';
+                await sleep(300 + Math.random() * 400);
+                step.className = 'step completed';
+                step.querySelector('.spinner').style.display = 'none';
+                const iconSpan = step.querySelector('span');
+                iconSpan.style.display = 'inline';
+                iconSpan.textContent = '\u2713';
+                step.querySelector('.step-time').textContent = `${(0.1 + Math.random() * 0.5).toFixed(1)}s`;
+            }
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        function hideLoading() {
+            document.getElementById('loadingSection').classList.remove('active');
+        }
+
+        function renderResults(data) {
+            const section = document.getElementById('resultsSection');
+            section.classList.add('active');
+
+            const report = data.report || {};
+            const classification = report.classification || 'UNCLEAR';
+            const confidence = report.confidence_score || 0;
+
+            // Banner
+            const banner = document.getElementById('classificationBanner');
+            banner.className = 'classification-banner';
+            if (classification.includes('REGRESSION')) banner.classList.add('regression');
+            else if (classification.includes('INTENTIONAL')) banner.classList.add('intentional');
+            else banner.classList.add('unclear');
+
+            document.getElementById('classLabel').textContent = classification.replace(/_/g, ' ');
+            document.getElementById('confValue').textContent = Math.round(confidence * 100) + '%';
+
+            // Summary
+            document.getElementById('summaryText').textContent = report.executive_summary || 'No summary available.';
+
+            // Findings
+            const grid = document.getElementById('findingsGrid');
+            grid.innerHTML = '';
+            (report.key_findings_json || []).forEach(f => {
+                grid.innerHTML += `<div class="finding-item"><div class="finding-label">${f.label}</div><div class="finding-value">${f.value}</div></div>`;
+            });
+
+            // Recommendation
+            document.getElementById('recType').textContent = report.recommendation || 'N/A';
+            document.getElementById('recDetail').textContent = report.recommendation_detail || '';
+
+            // Fix
+            const fix = report.suggested_code_direction;
+            const fixCard = document.getElementById('fixCard');
+            if (fix) {
+                fixCard.style.display = 'block';
+                document.getElementById('fixCode').textContent = fix;
+            } else {
+                fixCard.style.display = 'none';
+            }
+
+            // Code candidates
+            const codeList = document.getElementById('codeList');
+            codeList.innerHTML = '';
+            (data.code_candidates || []).forEach(c => {
+                codeList.innerHTML += `<li>
+                    <div>
+                        <div class="item-title">#${c.rank} ${c.file_path}</div>
+                        <div class="item-meta">Function: ${c.symbol || '?'} &bull; ${c.rationale || ''}</div>
+                    </div>
+                    <span class="badge ${c.confidence >= 0.7 ? 'high' : c.confidence >= 0.4 ? 'medium' : 'low'}">${Math.round(c.confidence * 100)}%</span>
+                </li>`;
+            });
+
+            // Commits
+            const commitList = document.getElementById('commitList');
+            commitList.innerHTML = '';
+            const sorted = (data.commit_candidates || []).sort((a, b) => b.confidence - a.confidence);
+            sorted.forEach(c => {
+                commitList.innerHTML += `<li>
+                    <div>
+                        <div class="item-title">${c.commit_sha.slice(0,7)} by @${c.author || '?'}</div>
+                        <div class="item-meta">PR #${c.pr_number || '?'}: ${c.pr_title || ''}</div>
+                        <div class="item-meta" style="margin-top:4px">${c.rationale || ''}</div>
+                    </div>
+                    <span class="badge ${c.suspicion_level || 'low'}">${(c.suspicion_level || 'low').toUpperCase()}</span>
+                </li>`;
+            });
+
+            // Related tickets
+            const ticketList = document.getElementById('ticketList');
+            ticketList.innerHTML = '';
+            const jiraArts = (data.context_artifacts || []).filter(a => a.source_type === 'jira');
+            jiraArts.forEach(a => {
+                const meta = a.metadata_json || {};
+                ticketList.innerHTML += `<li>
+                    <div>
+                        <div class="item-title">${a.source_id || '?'}: ${a.title || '?'}</div>
+                        <div class="item-meta">${meta.relation_reason || meta.relation_type || ''} &bull; Status: ${meta.status || '?'}</div>
+                    </div>
+                    <span class="badge related">${meta.relation_type || 'related'}</span>
+                </li>`;
+            });
+
+            // Confluence docs
+            const docsList = document.getElementById('docsList');
+            docsList.innerHTML = '';
+            const confArts = (data.context_artifacts || []).filter(a => a.source_type === 'confluence');
+            confArts.forEach(a => {
+                const tag = (a.relevance_tag || 'related').toLowerCase();
+                docsList.innerHTML += `<li>
+                    <div>
+                        <div class="item-title">${a.title || '?'}</div>
+                        <div class="item-meta">${a.key_excerpt || a.content_summary || ''}</div>
+                    </div>
+                    <span class="badge ${tag}">${(a.relevance_tag || 'RELATED')}</span>
+                </li>`;
+            });
+
+            // Pipeline steps
+            const finalSteps = document.getElementById('finalSteps');
+            finalSteps.innerHTML = '';
+            (data.progress_steps || []).sort((a, b) => a.step_number - b.step_number).forEach(s => {
+                const dur = s.duration_seconds ? s.duration_seconds.toFixed(2) + 's' : '...';
+                const icon = s.status === 'completed' ? '\u2713' : '\u2717';
+                finalSteps.innerHTML += `<div class="step completed"><div class="step-icon">${icon}</div><span>${s.step_name}</span><span class="step-time">${dur} &mdash; ${s.result_summary || ''}</span></div>`;
+            });
+        }
+
+        async function analyze() {
+            const input = document.getElementById('ticketInput').value;
+            if (!input.trim()) return;
+
+            const key = extractKey(input);
+            hideError();
+            document.getElementById('resultsSection').classList.remove('active');
+
+            // Show loading animation
+            showLoading();
+
+            const btn = document.getElementById('analyzeBtn');
+            btn.disabled = true;
+            btn.textContent = 'Analyzing...';
+
+            try {
+                const resp = await fetch(API + '/api/investigations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ issue_key: key }),
+                });
+
+                if (!resp.ok) {
+                    const text = await resp.text();
+                    throw new Error(`Server error: ${resp.status} ${text}`);
+                }
+
+                const data = await resp.json();
+
+                // Wait for animation to finish
+                await sleep(500);
+                hideLoading();
+
+                if (data.status === 'FAILED') {
+                    showError('Investigation failed: ' + (data.error_message || 'Unknown error'));
+                    return;
+                }
+
+                renderResults(data);
+                loadPastInvestigations();
+
+            } catch (err) {
+                hideLoading();
+                showError('Failed to run investigation: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Analyze';
+            }
+        }
+
+        async function loadPastInvestigations() {
+            try {
+                const resp = await fetch(API + '/api/investigations?page=1&page_size=10');
+                const data = await resp.json();
+
+                if (data.items && data.items.length > 0) {
+                    const section = document.getElementById('pastSection');
+                    section.style.display = 'block';
+
+                    const tbody = document.getElementById('pastTableBody');
+                    tbody.innerHTML = '';
+
+                    data.items.forEach(item => {
+                        const statusClass = item.status === 'COMPLETED' ? 'completed' : item.status === 'FAILED' ? 'failed' : 'running';
+                        const classText = (item.classification || '').replace(/_/g, ' ');
+                        const conf = item.confidence_score ? Math.round(item.confidence_score * 100) + '%' : '-';
+                        tbody.innerHTML += `<tr onclick="loadInvestigation('${item.id}')">
+                            <td><span class="status-dot ${statusClass}"></span>${item.status}</td>
+                            <td>${item.issue_key}</td>
+                            <td>${item.title || '-'}</td>
+                            <td>${classText || '-'}</td>
+                            <td>${conf}</td>
+                        </tr>`;
+                    });
+                }
+            } catch (e) {}
+        }
+
+        async function loadInvestigation(id) {
+            try {
+                const resp = await fetch(API + '/api/investigations/' + id);
+                const data = await resp.json();
+                renderResults(data);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (e) {
+                showError('Failed to load investigation');
+            }
+        }
+
+        // Load past investigations on page load
+        loadPastInvestigations();
+    </script>
+</body>
+</html>
